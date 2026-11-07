@@ -75,6 +75,88 @@ public class Marker {
      */
     public static int sharedWords(String a, String b, int k) {
         // TODO Mission 4
-        return -1;
+            if (k <= 0 || k > a.length() || k > b.length()) {
+                return 0;
+            }
+            final long BASE = 31L;
+            final long MOD = 1_000_000_009L;
+
+            long highestPower = 1;
+
+            for (int i = 1; i < k; i++) {
+                highestPower = (highestPower * BASE) % MOD;
+            }
+            Map<Long, List<Integer>> positionsByHash = new HashMap<>();
+
+            long hashB = 0;
+
+            for (int i = 0; i < k; i++) {
+                hashB = (hashB * BASE + b.charAt(i)) % MOD;
+            }
+
+            for (int start = 0; start <= b.length() - k; start++) {
+
+                List<Integer> positions = positionsByHash.get(hashB);
+
+                if (positions == null) {
+                    positions = new ArrayList<>();
+                    positionsByHash.put(hashB, positions);
+                }
+
+                positions.add(start);
+
+                if (start < b.length() - k) {
+                    long outgoing = b.charAt(start);
+                    long incoming = b.charAt(start + k);
+
+                    hashB = (hashB - outgoing * highestPower % MOD + MOD) % MOD;
+                    hashB = (hashB * BASE + incoming) % MOD;
+                }
+            }
+
+            long hashA = 0;
+
+            for (int i = 0; i < k; i++) {
+                hashA = (hashA * BASE + a.charAt(i)) % MOD;
+            }
+
+            int count = 0;
+
+            for (int start = 0; start <= a.length() - k; start++) {
+
+                List<Integer> candidates = positionsByHash.get(hashA);
+
+                if (candidates != null) {
+
+                    boolean found = false;
+
+                    for (int bStart : candidates) {
+
+                        int offset = 0;
+
+                        while (offset < k && a.charAt(start + offset) == b.charAt(bStart + offset)) {
+                            offset++;
+                        }
+                        if (offset == k) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found) {
+                        count++;
+                    }
+                }
+
+                if (start < a.length() - k) {
+
+                    long outgoing = a.charAt(start);
+                    long incoming = a.charAt(start + k);
+
+                    hashA = (hashA - outgoing * highestPower % MOD + MOD) % MOD;
+                    hashA = (hashA * BASE + incoming) % MOD;
+                }
+            }
+
+            return count;
+        }
     }
-}
