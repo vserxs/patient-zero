@@ -18,7 +18,71 @@ public class Outbreak {
      */
     public static boolean[] cheapestTests(int n, int[][] nb, int[] cost) {
         // TODO Mission 5a
-        return new boolean[n];
+        boolean[] tested = new boolean[n];
+
+        if (n == 0) return tested;
+
+        int[] parent = new int[n];
+        Arrays.fill(parent, -2);
+
+        int[] order = new int[n];
+        int[] stack = new int[n];
+
+        int top = 0;
+        int size = 0;
+
+        parent[0] = -1;
+        stack[top++] = 0;
+
+        while (top > 0) {
+            int u = stack[--top];
+            order[size++] = u;
+
+            for (int v : nb[u]) {
+                if (v != parent[u] && parent[v] == -2) {
+                    parent[v] = u;
+                    stack[top++] = v;
+                }
+            }
+        }
+        long[][] dp = new long[n][2];
+
+        for (int index = size - 1; index >= 0; index--) {
+            int u = order[index];
+
+            dp[u][0] = 0;
+            dp[u][1] = cost[u];
+
+            for (int v : nb[u]) {
+                if (parent[v] == u) {
+                    dp[u][0] += dp[v][1];
+
+                    dp[u][1] += Math.min(dp[v][0], dp[v][1]);
+                }
+            }
+        }
+        int[] state = new int[n];
+
+        state[0] = dp[0][1] < dp[0][0] ? 1 : 0;
+
+        for (int index = 0; index < size; index++) {
+            int u = order[index];
+
+            for (int v : nb[u]) {
+                if (parent[v] == u) {
+
+                    if (state[u] == 0) {
+                        state[v] = 1;
+                    } else {
+                        state[v] = dp[v][1] < dp[v][0] ? 1 : 0;
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            tested[i] = state[i] == 1;
+        }
+        return tested;
     }
 
     /**
@@ -28,6 +92,57 @@ public class Outbreak {
      */
     public static int longestChain(int n, int[][] nb) {
         // TODO Mission 5b
-        return -1;
+        if (n <= 1) return 0;
+
+        int[] parent = new int[n];
+        Arrays.fill(parent, -2);
+
+        int[] order = new int[n];
+        int[] stack = new int[n];
+
+        int top = 0;
+        int size = 0;
+
+        parent[0] = -1;
+        stack[top++] = 0;
+
+        while (top > 0) {
+            int u = stack[--top];
+            order[size++] = u;
+
+            for (int v : nb[u]) {
+                if (v != parent[u] && parent[v] == -2) {
+                    parent[v] = u;
+                    stack[top++] = v;
+                }
+            }
+        }
+        int[] down = new int[n];
+        int diameter = 0;
+
+        for (int index = size - 1; index >= 0; index--) {
+            int u = order[index];
+
+            int longest = 0;
+            int secondLongest = 0;
+
+            for (int v : nb[u]) {
+                if (parent[v] == u) {
+                    int branch = down[v] + 1;
+
+                    if (branch > longest) {
+                        secondLongest = longest;
+                        longest = branch;
+                    } else if (branch > secondLongest) {
+                        secondLongest = branch;
+                    }
+                }
+            }
+            down[u] = longest;
+
+            diameter = Math.max(diameter,longest + secondLongest
+            );
+        }
+        return diameter;
     }
 }
